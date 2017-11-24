@@ -4,6 +4,17 @@ from twisted.internet import reactor
 import binascii
 import os
 
+# SERVER PROTOCOL
+# CREATE <GAME_SIZE>
+# AUTHACK <USERNAME> <TOKEN>
+# START <GAME_WIDTH> <GAME_HEIGHT> <POS_X> <POS_Y> <DIRECTION>
+# UPDATE <GAME_BOARD>
+# WINNER <WINNER_NAMES>
+
+# CLIENT PROTOCOL
+# AUTH <USERNAME>
+# <TOKEN> DIRECTION <DIRECTION>
+
 class GameServer(DatagramProtocol):
 
     def datagramReceived(self, data, (host, port)):
@@ -21,7 +32,14 @@ class GameServer(DatagramProtocol):
 
     def create_game(self, split_data):
         print "Creating game of size " + split_data[1]
-        self.curr_game = Game(int(split_data[1]))
+        if not curr_game:
+            self.curr_game = Game(int(split_data[1]))
+            send_str = "CREATE SUCCESS"
+            self.transport.write(send_str, (host, port))
+        else:
+            # Error 1 is game already exists
+            send_str = "CREATE ERROR 1"
+            self.transport.write(send_str, (host, port))
 
     def auth(self, split_data, host, port):
         print "User authenticating " + split_data[1]
