@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
+import sys
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
+from server.gameserver import GameServer
 
-class Echo(DatagramProtocol):
 
-    def datagramReceived(self, data, (host, port)):
-        print "received %r from %s:%d" % (data, host, port)
-        self.transport.write(data, (host, port))
+try:
+    port = int(sys.argv[1])
+except:
+    port = 9999
 
-reactor.listenUDP(9999, Echo())
+reactor.listenUDP(port, GameServer())
 reactor.run()
