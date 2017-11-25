@@ -1,8 +1,6 @@
 from game.game import Game
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-import binascii
-import os
 
 # SERVER PROTOCOL
 # CREATE <GAME_SIZE>
@@ -17,7 +15,6 @@ import os
 
 class GameServer(DatagramProtocol):
     def __init__(self):
-        self.token_length = 512/8
         self.curr_game = None
 
     def datagramReceived(self, data, (host, port)):
@@ -45,10 +42,5 @@ class GameServer(DatagramProtocol):
 
     def auth(self, split_data, (host, port)):
         print "User authenticating " + split_data[1]
-        token = binascii.hexlify(os.urandom(self.token_length))
-        self.curr_game.players[split_data[1]] = {}
-        self.curr_game.players[split_data[1]]['token'] = token
-        self.curr_game.players[split_data[1]]['host'] = host
-        self.curr_game.players[split_data[1]]['port'] = port
-        send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
+        send_str = self.curr_game.add_player(split_data, (host, port))
         self.transport.write(send_str, (host, port))
