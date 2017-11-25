@@ -24,22 +24,22 @@ class Game:
 
     def add_player(self, split_data, (host, port)):
         token = binascii.hexlify(os.urandom(self.token_length))
-        if len(self.players.keys()) >= self.player_count:
-            # AUTHFAIL 1 means game full
-            send_str = "AUTHFAIL 1\n"
-            return send_str
-
         if len(self.players.keys()) == 0:
             start_x = 0
             start_y = 0
             # DIR RIGHT
             direction = "RIGHT"
 
-        else if len(self.players.keys()) == 1:
-            start_x = game_size_x - 1
-            start_y = game_size_y - 1
+        elif len(self.players.keys()) == 1:
+            start_x = self.game_size_x - 1
+            start_y = self.game_size_y - 1
             # DIR LEFT
             direction = "LEFT"
+
+        if len(self.players.keys()) >= self.player_count:
+            # AUTHFAIL 1 means game full
+            send_str = "AUTHFAIL 1\n"
+            return send_str
 
         else:
             self.players[split_data[1]] = {}
@@ -53,21 +53,26 @@ class Game:
             self.players[split_data[1]]['state'] = 1
             send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
             return send_str
-            send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
-            return send_str
 
     def run(self):
-        for i in range(self.player_count):
+        for i in self.players.keys():
             self.advance_player(i)
 
-    def advance_player(self, player_num):
-        direction = self.players[player_num]['direction']
-        self.game_board[self.players[player_num]['y']][self.players[player_num]['x']] = "1"
+        send_str = ""
+        for i in range(self.game_size_y):
+            send_str = send_str + ''.join(self.game_board[i])
+            send_str = send_str + "\n"
+
+        return send_str
+
+    def advance_player(self, player_name):
+        direction = self.players[player_name]['direction']
+        self.game_board[self.players[player_name]['y']][self.players[player_name]['x']] = "1"
         if direction == "UP":
-            self.players[player_num]['y'] = self.players[player_num]['y'] - 1
-        else if direction == "RIGHT":
-            self.players[player_num]['x'] = self.players[player_num]['x'] + 1
-        else if direction == "DOWN":
-            self.players[player_num]['y'] = self.players[player_num]['y'] + 1
-        else if direction == "LEFT":
-            self.players[player_num]['x'] = self.players[player_num]['x'] - 1
+            self.players[player_name]['y'] = self.players[player_name]['y'] - 1
+        elif direction == "RIGHT":
+            self.players[player_name]['x'] = self.players[player_name]['x'] + 1
+        elif direction == "DOWN":
+            self.players[player_name]['y'] = self.players[player_name]['y'] + 1
+        elif direction == "LEFT":
+            self.players[player_name]['x'] = self.players[player_name]['x'] - 1

@@ -26,8 +26,12 @@ class GameServer(DatagramProtocol):
         split_data = data.rstrip().split()
         if split_data[0] == "CREATE":
             self.create_game(split_data, (host, port))
-        if split_data[0] == "AUTH":
+
+        elif split_data[0] == "AUTH":
             self.auth(split_data, (host, port))
+
+        elif split_data[0] == "UPDATE":
+            self.update(split_data, (host, port))
 
     def create_game(self, split_data, (host, port)):
         print "Creating game of size " + split_data[1]
@@ -51,3 +55,8 @@ class GameServer(DatagramProtocol):
         print "User authenticating " + split_data[1]
         send_str = self.curr_game.add_player(split_data, (host, port))
         self.transport.write(send_str, (host, port))
+
+    def update(self, split_data, (host, port)):
+        send_str = self.curr_game.run()
+        self.transport.write(send_str, (host, port))
+
