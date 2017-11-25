@@ -31,10 +31,17 @@ class GameServer(DatagramProtocol):
 
     def create_game(self, split_data, (host, port)):
         print "Creating game of size " + split_data[1]
+        if split_data[1] <= 1:
+            # ERROR 2 means game size too small
+            send_str = "CREATE ERROR 2\n"
+            self.transport.write(send_str, (host, port))
+            return
+
         if not self.curr_game:
             self.curr_game = Game(int(split_data[1]))
             send_str = "CREATE SUCCESS\n"
             self.transport.write(send_str, (host, port))
+
         else:
             # Error 1 is game already exists
             send_str = "CREATE ERROR 1\n"

@@ -1,5 +1,6 @@
 import binascii
 import os
+import math
 
 
 class Game:
@@ -7,6 +8,19 @@ class Game:
         self.player_count = player_count
         self.players = {}
         self.token_length = 512/8
+        game_size_base = 20
+        self.game_size_x = game_size_base * int(math.floor(player_count/2.0))
+        self.game_size_y = game_size_base * int(math.floor(player_count/2.0))
+        self.game_board = []
+
+        # Generate board
+        for i in range(self.game_size_y):
+            self.game_board.append([])
+            for j in range(self.game_size_x):
+                self.game_board[i].append("0")
+
+        # Debugging
+        print self.game_board
 
     def add_player(self, split_data, (host, port)):
         token = binascii.hexlify(os.urandom(self.token_length))
