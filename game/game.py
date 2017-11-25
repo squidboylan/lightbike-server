@@ -33,13 +33,13 @@ class Game:
             start_x = 0
             start_y = 0
             # DIR RIGHT
-            direction = 1
+            direction = "RIGHT"
 
         else if len(self.players.keys()) == 1:
             start_x = game_size_x - 1
             start_y = game_size_y - 1
             # DIR LEFT
-            direction = 3
+            direction = "LEFT"
 
         else:
             self.players[split_data[1]] = {}
@@ -61,13 +61,13 @@ class Game:
             self.advance_player(i)
 
     def advance_player(self, player_num):
-        direction = self.direction
+        direction = self.players[player_num]['direction']
         self.game_board[self.players[player_num]['y']][self.players[player_num]['x']] = "1"
-        if direction == 0:
+        if direction == "UP":
             self.players[player_num]['y'] = self.players[player_num]['y'] - 1
-        if direction == 1:
+        else if direction == "RIGHT":
             self.players[player_num]['x'] = self.players[player_num]['x'] + 1
-        if direction == 2:
+        else if direction == "DOWN":
             self.players[player_num]['y'] = self.players[player_num]['y'] + 1
-        if direction == 3:
+        else if direction == "LEFT":
             self.players[player_num]['x'] = self.players[player_num]['x'] - 1
