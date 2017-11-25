@@ -27,12 +27,47 @@ class Game:
         if len(self.players.keys()) >= self.player_count:
             # AUTHFAIL 1 means game full
             send_str = "AUTHFAIL 1\n"
+            return send_str
+
+        if len(self.players.keys()) == 0:
+            start_x = 0
+            start_y = 0
+            # DIR RIGHT
+            direction = 1
+
+        else if len(self.players.keys()) == 1:
+            start_x = game_size_x - 1
+            start_y = game_size_y - 1
+            # DIR LEFT
+            direction = 3
 
         else:
             self.players[split_data[1]] = {}
             self.players[split_data[1]]['token'] = token
             self.players[split_data[1]]['host'] = host
             self.players[split_data[1]]['port'] = port
+            self.players[split_data[1]]['x'] = start_x
+            self.players[split_data[1]]['y'] = start_y
+            self.players[split_data[1]]['y'] = start_y
+            self.players[split_data[1]]['direction'] = direction
+            self.players[split_data[1]]['state'] = 1
             send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
+            return send_str
+            send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
+            return send_str
 
-        return send_str
+    def run(self):
+        for i in range(self.player_count):
+            self.advance_player(i)
+
+    def advance_player(self, player_num):
+        direction = self.direction
+        self.game_board[self.players[player_num]['y']][self.players[player_num]['x']] = "1"
+        if direction == 0:
+            self.players[player_num]['y'] = self.players[player_num]['y'] - 1
+        if direction == 1:
+            self.players[player_num]['x'] = self.players[player_num]['x'] + 1
+        if direction == 2:
+            self.players[player_num]['y'] = self.players[player_num]['y'] + 1
+        if direction == 3:
+            self.players[player_num]['x'] = self.players[player_num]['x'] - 1
