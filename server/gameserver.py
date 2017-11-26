@@ -1,7 +1,7 @@
 from game.game import Game
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-import thread
+import threading
 
 # SERVER PROTOCOL
 # CREATE <GAME_SIZE>
@@ -59,12 +59,16 @@ class GameServer(DatagramProtocol):
         print "User authenticating " + split_data[1]
         send_str = self.curr_game.add_player(split_data, (host, port))
         self.transport.write(send_str, (host, port))
-
-    def update(self, split_data, (host, port)):
-        send_str = self.curr_game.run()
-        self.transport.write(send_str, (host, port))
+        if len(self.curr_game.players.keys()) == self.curr_game.player_count and send_str.startswith("AUTHACK"):
+            self.start_game()
 
     def update_direction(self, split_data, (host, port)):
         send_str = self.curr_game.update_direction(split_data, (host, port))
         if send_str:
             self.transport.write(send_str, (host, port))
+
+    def start_game(self):
+        t1 = threading.Thread(target=self.curr_game.run())
+        t1.start()
+        t1.join()
+        self.curr_game = None

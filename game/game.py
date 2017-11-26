@@ -1,7 +1,7 @@
 import binascii
 import os
 import math
-
+import time
 
 class Game:
     def __init__(self, player_count, server_obj):
@@ -10,8 +10,10 @@ class Game:
         self.players = {}
         self.token_length = 512/8
         game_size_base = 20
-        self.game_size_x = game_size_base * int(math.floor(player_count/2.0))
-        self.game_size_y = game_size_base * int(math.floor(player_count/2.0))
+        #self.game_size_x = game_size_base * int(math.floor(player_count/2.0))
+        #self.game_size_y = game_size_base * int(math.floor(player_count/2.0))
+        self.game_size_x = game_size_base * player_count/2
+        self.game_size_y = game_size_base * player_count/2
         self.game_board = []
 
         # Generate board
@@ -56,27 +58,77 @@ class Game:
             return send_str
 
     def run(self):
-        for i in self.players.keys():
-            self.advance_player(i)
+        while 1:
+            alive = []
+            for i in self.players.keys():
+                if self.players[i]['state'] == 1:
+                    alive.append(i)
 
-        send_str = ""
-        for i in range(self.game_size_y):
-            send_str = send_str + ''.join(self.game_board[i])
-            send_str = send_str + "\n"
+            for i in self.players.keys():
+                self.advance_player(i)
 
-        return send_str
+            self.check_collision()
+
+            for i in self.players.keys():
+                tmp_board = map(list, self.game_board)
+                for j in self.players.keys():
+                    if self.players[j]['state'] == 1:
+                        if j == i:
+                            tmp_board[self.players[j]['y']][self.players[j]['x']] = 'P'
+                        else:
+                            tmp_board[self.players[j]['y']][self.players[j]['x']] = 'E'
+
+                send_str = ""
+                for j in range(self.game_size_y):
+                    send_str = send_str + ''.join(tmp_board[j])
+                    send_str = send_str + "\n"
+
+                host = self.players[i]['host']
+                port = self.players[i]['port']
+                self.server_obj.transport.write(send_str, (host, port))
+
+            post_run_alive = []
+            for i in self.players.keys():
+                if self.players[i]['state'] == 1:
+                    post_run_alive.append(i)
+
+            if len(post_run_alive) == 1:
+                send_str = "WINNER " + post_run_alive[0] + "\n"
+                for i in self.players.keys():
+                    host = self.players[i]['host']
+                    port = self.players[i]['port']
+                    self.server_obj.transport.write(send_str, (host, port))
+
+                return
+
+            if len(post_run_alive) == 0:
+                send_str = "WINNER"
+                for j in alive:
+                    send_str = send_str + " " + j
+
+                send_str = send_str + "\n"
+                for i in self.players.keys():
+                    host = self.players[i]['host']
+                    port = self.players[i]['port']
+                    self.server_obj.transport.write(send_str, (host, port))
+
+                return
+
+            time.sleep(.500)
+
 
     def advance_player(self, player_name):
         direction = self.players[player_name]['direction']
-        self.game_board[self.players[player_name]['y']][self.players[player_name]['x']] = "1"
-        if direction == "UP":
-            self.players[player_name]['y'] = self.players[player_name]['y'] - 1
-        elif direction == "RIGHT":
-            self.players[player_name]['x'] = self.players[player_name]['x'] + 1
-        elif direction == "DOWN":
-            self.players[player_name]['y'] = self.players[player_name]['y'] + 1
-        elif direction == "LEFT":
-            self.players[player_name]['x'] = self.players[player_name]['x'] - 1
+        if self.players[player_name]['state'] == 1:
+            self.game_board[self.players[player_name]['y']][self.players[player_name]['x']] = "1"
+            if direction == "UP":
+                self.players[player_name]['y'] = self.players[player_name]['y'] - 1
+            elif direction == "RIGHT":
+                self.players[player_name]['x'] = self.players[player_name]['x'] + 1
+            elif direction == "DOWN":
+                self.players[player_name]['y'] = self.players[player_name]['y'] + 1
+            elif direction == "LEFT":
+                self.players[player_name]['x'] = self.players[player_name]['x'] - 1
 
     def update_direction(self, split_data, (host, port)):
         player = None
@@ -100,3 +152,21 @@ class Game:
             player['direction'] = direction
         elif direction == "UP" and not player['direction'] == "UP":
             player['direction'] = direction
+
+    def check_collision(self):
+        for i in self.players.keys():
+            if self.players[i]['state'] == 1:
+                x = self.players[i]['x']
+                y = self.players[i]['y']
+                print i + " x: " + str(x) + ", y: " + str(y)
+                if x >= self.game_size_x or x < 0:
+                    self.players[i]['state'] = 0
+                    continue
+
+                if y >= self.game_size_y or y < 0:
+                    self.players[i]['state'] = 0
+                    continue
+
+                if self.game_board[y][x] == "1":
+                    self.players[i]['state'] = 0
+
