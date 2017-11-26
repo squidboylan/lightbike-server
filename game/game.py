@@ -4,7 +4,8 @@ import math
 
 
 class Game:
-    def __init__(self, player_count):
+    def __init__(self, player_count, server_obj):
+        self.server_obj = server_obj
         self.player_count = player_count
         self.players = {}
         self.token_length = 512/8
@@ -76,3 +77,26 @@ class Game:
             self.players[player_name]['y'] = self.players[player_name]['y'] + 1
         elif direction == "LEFT":
             self.players[player_name]['x'] = self.players[player_name]['x'] - 1
+
+    def update_direction(self, split_data, (host, port)):
+        player = None
+        token = split_data[1]
+        direction = split_data[2]
+
+        for i in self.players.keys():
+            if self.players[i]['host'] == host and self.players[i]['port'] == port and self.players[i]['token'] == token:
+                player = self.players[i]
+                break
+
+        if not player:
+            send_str = "BAD TOKEN"
+            return send_str
+
+        if direction == "RIGHT" and not player['direction'] == "LEFT":
+            player['direction'] = direction
+        elif direction == "UP" and not player['direction'] == "DOWN":
+            player['direction'] = direction
+        elif direction == "LEFT" and not player['direction'] == "RIGHT":
+            player['direction'] = direction
+        elif direction == "UP" and not player['direction'] == "UP":
+            player['direction'] = direction

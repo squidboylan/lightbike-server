@@ -1,6 +1,7 @@
 from game.game import Game
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
+import thread
 
 # SERVER PROTOCOL
 # CREATE <GAME_SIZE>
@@ -11,7 +12,7 @@ from twisted.internet import reactor
 
 # CLIENT PROTOCOL
 # AUTH <USERNAME>
-# <TOKEN> DIRECTION <DIRECTION>
+# DIRECTION <TOKEN> <DIRECTION>
 
 class GameServer(DatagramProtocol):
     def __init__(self):
@@ -33,6 +34,9 @@ class GameServer(DatagramProtocol):
         elif split_data[0] == "UPDATE":
             self.update(split_data, (host, port))
 
+        elif split_data[0] == "DIRECTION":
+            self.update_direction(split_data, (host, port))
+
     def create_game(self, split_data, (host, port)):
         print "Creating game of size " + split_data[1]
         if split_data[1] <= 1:
@@ -42,7 +46,7 @@ class GameServer(DatagramProtocol):
             return
 
         if not self.curr_game:
-            self.curr_game = Game(int(split_data[1]))
+            self.curr_game = Game(int(split_data[1]), self)
             send_str = "CREATE SUCCESS\n"
             self.transport.write(send_str, (host, port))
 
@@ -60,3 +64,7 @@ class GameServer(DatagramProtocol):
         send_str = self.curr_game.run()
         self.transport.write(send_str, (host, port))
 
+    def update_direction(self, split_data, (host, port)):
+        send_str = self.curr_game.update_direction(split_data, (host, port))
+        if send_str:
+            self.transport.write(send_str, (host, port))
