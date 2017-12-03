@@ -68,7 +68,6 @@ class GameServer(DatagramProtocol):
             self.transport.write(send_str, (host, port))
 
     def start_game(self):
-        t1 = threading.Thread(target=self.curr_game.run())
+        t1 = threading.Thread(target=self.curr_game.run)
         t1.start()
-        t1.join()
-        self.curr_game = None
+        #t1.join()

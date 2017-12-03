@@ -78,7 +78,7 @@ class Game:
                         else:
                             tmp_board[self.players[j]['y']][self.players[j]['x']] = 'E'
 
-                send_str = ""
+                send_str = "UPDATE "
                 for j in range(self.game_size_y):
                     send_str = send_str + ''.join(tmp_board[j])
                     send_str = send_str + "\n"
@@ -99,6 +99,7 @@ class Game:
                     port = self.players[i]['port']
                     self.server_obj.transport.write(send_str, (host, port))
 
+                self.server_obj.curr_game = None
                 return
 
             if len(post_run_alive) == 0:
@@ -112,6 +113,7 @@ class Game:
                     port = self.players[i]['port']
                     self.server_obj.transport.write(send_str, (host, port))
 
+                self.server_obj.curr_game = None
                 return
 
             time.sleep(.500)
@@ -150,7 +152,7 @@ class Game:
             player['direction'] = direction
         elif direction == "LEFT" and not player['direction'] == "RIGHT":
             player['direction'] = direction
-        elif direction == "UP" and not player['direction'] == "UP":
+        elif direction == "DOWN" and not player['direction'] == "UP":
             player['direction'] = direction
 
     def check_collision(self):
