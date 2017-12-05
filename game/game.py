@@ -27,6 +27,17 @@ class Game:
 
     def add_player(self, split_data, (host, port)):
         token = binascii.hexlify(os.urandom(self.token_length))
+
+        if len(self.players.keys()) >= self.player_count:
+            # AUTHFAIL 1 means game full
+            send_str = "AUTHFAIL 1\n"
+            return send_str
+
+        elif split_data[1] in self.players.keys():
+            # AUTHFAIL 2 means duplicate username
+            send_str = "AUTHFAIL 2\n"
+            return send_str
+
         if len(self.players.keys()) == 0:
             start_x = 0
             start_y = 0
@@ -39,23 +50,29 @@ class Game:
             # DIR LEFT
             direction = "LEFT"
 
-        if len(self.players.keys()) >= self.player_count:
-            # AUTHFAIL 1 means game full
-            send_str = "AUTHFAIL 1\n"
-            return send_str
+        elif len(self.players.keys()) == 2:
+            start_x = 0
+            start_y = self.game_size_y - 1
+            # DIR LEFT
+            direction = "UP"
 
-        else:
-            self.players[split_data[1]] = {}
-            self.players[split_data[1]]['token'] = token
-            self.players[split_data[1]]['host'] = host
-            self.players[split_data[1]]['port'] = port
-            self.players[split_data[1]]['x'] = start_x
-            self.players[split_data[1]]['y'] = start_y
-            self.players[split_data[1]]['y'] = start_y
-            self.players[split_data[1]]['direction'] = direction
-            self.players[split_data[1]]['state'] = 1
-            send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
-            return send_str
+        elif len(self.players.keys()) == 3:
+            start_x = self.game_size_x - 1
+            start_y = 0
+            # DIR LEFT
+            direction = "DOWN"
+
+        self.players[split_data[1]] = {}
+        self.players[split_data[1]]['token'] = token
+        self.players[split_data[1]]['host'] = host
+        self.players[split_data[1]]['port'] = port
+        self.players[split_data[1]]['x'] = start_x
+        self.players[split_data[1]]['y'] = start_y
+        self.players[split_data[1]]['y'] = start_y
+        self.players[split_data[1]]['direction'] = direction
+        self.players[split_data[1]]['state'] = 1
+        send_str = "AUTHACK " + split_data[1] + " " + token + "\n"
+        return send_str
 
     def run(self):
         while 1:
@@ -99,6 +116,7 @@ class Game:
                     port = self.players[i]['port']
                     self.server_obj.transport.write(send_str, (host, port))
 
+                print send_str
                 self.server_obj.curr_game = None
                 return
 
@@ -113,6 +131,7 @@ class Game:
                     port = self.players[i]['port']
                     self.server_obj.transport.write(send_str, (host, port))
 
+                print send_str
                 self.server_obj.curr_game = None
                 return
 
@@ -136,6 +155,7 @@ class Game:
         player = None
         token = split_data[1]
         direction = split_data[2]
+
 
         for i in self.players.keys():
             if self.players[i]['host'] == host and self.players[i]['port'] == port and self.players[i]['token'] == token:
@@ -172,3 +192,8 @@ class Game:
                 if self.game_board[y][x] == "1":
                     self.players[i]['state'] = 0
 
+                for j in self.players.keys():
+                    if self.players[j]['state'] == 1 and i != j:
+                        if self.players[j]['x'] == self.players[i]['x'] and self.players[j]['y'] == self.players[i]['y']:
+                            self.players[j]['state'] = 0
+                            self.players[i]['state'] = 0

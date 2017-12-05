@@ -70,4 +70,3 @@ class GameServer(DatagramProtocol):
     def start_game(self):
         t1 = threading.Thread(target=self.curr_game.run)
         t1.start()
-        #t1.join()
