@@ -6,7 +6,6 @@ import threading
 # SERVER PROTOCOL
 # CREATE <GAME_SIZE>
 # AUTHACK <USERNAME> <TOKEN>
-# START <GAME_WIDTH> <GAME_HEIGHT> <POS_X> <POS_Y> <DIRECTION>
 # UPDATE <GAME_BOARD>
 # WINNER <WINNER_NAMES>
 
@@ -20,7 +19,6 @@ class GameServer(DatagramProtocol):
 
     def datagramReceived(self, data, (host, port)):
         print "received %r from %s:%d" % (data, host, port)
-        #self.transport.write(data, (host, port))
         self.parse_received_packet(data, (host, port))
 
     def parse_received_packet(self, data, (host, port)):
@@ -39,8 +37,8 @@ class GameServer(DatagramProtocol):
 
     def create_game(self, split_data, (host, port)):
         print "Creating game of size " + split_data[1]
-        if split_data[1] <= 1:
-            # ERROR 2 means game size too small
+        if int(split_data[1]) <= 1 or int(split_data[1]) > 4:
+            # ERROR 2 means invalid game size
             send_str = "CREATE ERROR 2\n"
             self.transport.write(send_str, (host, port))
             return
